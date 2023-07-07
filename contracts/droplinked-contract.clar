@@ -1,7 +1,7 @@
 (impl-trait .sft-trait.sft-trait)
 
 (define-constant droplinked-public 0x031a5d135011eda489132db757fab241a1cf12f869a1dd7cc086429507116a2ba6)
-(define-constant droplinked 'STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6)
+(define-constant droplinked 'ST3JDMA2CZV5H6YCGMGCR8A3JDZTFV5TVR43FR6F9)
 
 (define-fungible-token product)
 (define-non-fungible-token sku { id: uint, owner: principal })
@@ -19,6 +19,8 @@
 (define-map balances { id: uint, owner: principal } uint)
 
 (define-map supplies uint uint)
+
+(define-map ids (string-ascii 256) uint)
 
 (define-constant request-status-accepted u1)
 (define-constant request-status-pending u0)
@@ -51,7 +53,7 @@
 (define-constant err-invalid-uri (err u302))
 (define-constant err-invalid-commission (err u303))
 
-(define-public (create (amount uint) (price uint) (commission uint) (uri (string-ascii 256)) (creator principal))
+(define-public (create (amount uint) (price uint) (commission uint) (uri (string-ascii 256)) (external-id (string-ascii 256)) (creator principal))
   (let 
     (
       (id (+ (var-get last-sku-id) u1))
@@ -69,7 +71,17 @@
     (map-insert supplies id amount)
     (map-insert prices id price)
     (map-insert uris id uri)
+    (map-insert ids external-id id)
     (print { type: "sft_mint", token-id: id, amount: amount, recipient: creator })
+    (print {
+      type: "droplinked:create",
+      amount: amount,
+      price: price,
+      uri: uri,
+      external-id: external-id,
+      creator: creator
+    })
+    (var-set last-sku-id id)
     (ok id)
   )
 )
@@ -86,10 +98,30 @@
     (asserts! (not (is-eq publisher creator)) err-invalid-creator)
     (asserts! (<= amount creator-balance) err-invalid-amount)
     (asserts! (<= commission creator-commission) err-invalid-commission)
+    (print {
+      type: "droplinked:request",
+      id: id,
+      amount: amount, 
+      commission: commission,
+      publisher: publisher
+    })
     (ok (map-insert requests 
         { id: id, publisher: publisher }
         { amount: amount, commission: commission, status: request-status-pending }
     ))
+  )
+)
+
+(define-public (cancel-request (id uint) (publisher principal))
+  (begin
+    (asserts! (is-eq contract-caller publisher) err-publisher-only)
+    (asserts! (is-none (map-get? requests { id: id, publisher: publisher })) err-request-pending)
+    (print {
+      type: "droplinked:cancel-request",
+      id: id,
+      publisher: publisher
+    })
+    (ok (map-delete requests { id: id,  publisher: publisher }))
   )
 )
 
@@ -109,6 +141,40 @@
     (try! (as-contract (transfer id amount creator publisher)))
     (map-set commissions { id: id, publisher: publisher } commission)
     (map-set requests { id: id, publisher: publisher } (merge request { status: request-status-accepted }))
+    (print {
+      type: "droplinked:accept-request",
+      id: id,
+      amount: amount,
+      commission: commission,
+      creator: creator,
+      publisher: publisher,
+    })
+    (ok true)
+  )
+)
+
+(define-public (reject-request (id uint) (publisher principal))
+    (let 
+    (
+      (creator (unwrap! (map-get? creators id) err-invalid-sku))
+      (creator-balance (unwrap! (map-get? balances { id: id, owner: creator }) err-insufficient-creator-balance))
+      (request (unwrap! (map-get? requests { id: id, publisher: publisher }) err-invalid-request))
+      (amount (get amount request))
+      (commission (get commission request))
+      (status (get status request))
+    )
+    (asserts! (is-eq contract-caller creator) err-creator-only)
+    (asserts! (is-eq status request-status-pending) err-request-not-pending)
+    (asserts! (>= creator-balance amount) err-invalid-amount)
+    (map-delete requests { id: id, publisher: publisher })
+    (print {
+      type: "droplinked:reject-request",
+      id: id,
+      amount: amount,
+      commission: commission,
+      creator: creator,
+      publisher: publisher,
+    })
     (ok true)
   )
 )
@@ -158,6 +224,16 @@
     )
     (try! (ft-transfer? product u1 publisher purchaser))
     (try! (as-contract (transfer id u1 publisher purchaser)))
+    (print {
+      type: "droplinked:purchase",
+      purchaser: purchaser,
+      publisher: publisher,
+      rate-buff: rate-buff,
+      height-buff: height-buff,
+      price: price,
+      shipping: shipping,
+      tax: tax
+    })
     (ok true)
   )
 )
@@ -174,7 +250,7 @@
     (try! (burn-and-mint { id: id, owner: sender }))
     (try! (burn-and-mint { id: id, owner: recipient }))
     (map-set balances { id: id, owner: sender } (- sender-balance amount))
-    (map-set balances { id: id, owner: recipient } (- recipient-balance amount))
+    (map-set balances { id: id, owner: recipient } amount)
     (print { type: "sft_transfer", token-id: id, amount: amount, sender: sender, recipient: recipient })
     (ok true)
   )
@@ -222,6 +298,14 @@
 
 (define-read-only (get-price (id uint)) 
   (ok (map-get? prices id))
+)
+
+(define-read-only (get-last-sku-id) 
+  (ok (var-get last-sku-id))
+)
+
+(define-read-only (get-id (external-id (string-ascii 256)))
+  (map-get? ids external-id)
 )
 
 (define-read-only (verify-droplinked-signature? (message (buff 16)) (droplinked-signature (buff 65))) 
