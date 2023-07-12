@@ -5,10 +5,13 @@ authors = ['Erfan Yeganegi <yeganegierfan@gmail.com>']
 telemetry = false
 cache_dir = './.cache'
 requirements = []
-
 [contracts.droplinked-contract]
-depends_on=["sft-trait"]
 path = 'contracts/droplinked-contract.clar'
+clarity_version = 2
+epoch = 2.1
+
+[contracts.droplinked-gateway]
+path = 'contracts/droplinked-gateway.clar'
 clarity_version = 2
 epoch = 2.1
 
@@ -16,3 +19,11 @@ epoch = 2.1
 path = 'contracts/sft-trait.clar'
 clarity_version = 2
 epoch = 2.1
+[repl.analysis]
+passes = []
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false

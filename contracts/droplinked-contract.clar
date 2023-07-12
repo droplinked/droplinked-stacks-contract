@@ -1,7 +1,7 @@
 (impl-trait .sft-trait.sft-trait)
 
 (define-constant droplinked-public 0x031a5d135011eda489132db757fab241a1cf12f869a1dd7cc086429507116a2ba6)
-(define-constant droplinked 'ST3JDMA2CZV5H6YCGMGCR8A3JDZTFV5TVR43FR6F9)
+(define-constant droplinked 'SPTYMZEAQ7CGTGF8Z7EP62CEP1WCFSBH6D1J0NRB)
 
 (define-fungible-token product)
 (define-non-fungible-token sku { id: uint, owner: principal })
