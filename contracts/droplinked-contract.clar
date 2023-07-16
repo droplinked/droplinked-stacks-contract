@@ -75,10 +75,12 @@
     (print { type: "sft_mint", token-id: id, amount: amount, recipient: creator })
     (print {
       type: "droplinked:create",
+      id: id,
       amount: amount,
       price: price,
       uri: uri,
       external-id: external-id,
+      commission: commission,
       creator: creator
     })
     (var-set last-sku-id id)
