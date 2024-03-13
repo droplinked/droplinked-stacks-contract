@@ -1,22 +1,25 @@
-
 [project]
-name = "droplinked-stacks-contract"
-description = ""
-authors = []
+name = 'droplinked-stacks-contract'
+description = 'droplinked is a commerce infrastructure network operating as a decentralized inventory management and sales tracking system for digital and physical goods.'
+authors = ["Erfan Yeganegi <yeganegierfan@gmail.com>"]
 telemetry = true
-cache_dir = "./.cache"
+cache_dir = './.cache'
+requirements = []
 
-# [contracts.counter]
-# path = "contracts/counter.clar"
+[contracts.droplinked-sft-trait]
+path = 'contracts/droplinked-sft-trait.clar'
+clarity_version = 2
+epoch = 2.4
+
+[repl]
+clarity_wasm_mode = false
+show_timings = false
 
 [repl.analysis]
-passes = ["check_checker"]
-check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
+passes = ['check_checker']
 
-# Check-checker settings:
-# trusted_sender: if true, inputs are trusted after tx_sender has been checked.
-# trusted_caller: if true, inputs are trusted after contract-caller has been checked.
-# callee_filter: if true, untrusted data may be passed into a private function without a
-# warning, if it gets checked inside. This check will also propagate up to the
-# caller.
-# More informations: https://www.hiro.so/blog/new-safety-checks-in-clarinet
+[repl.analysis.check_checker]
+strict = true
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
