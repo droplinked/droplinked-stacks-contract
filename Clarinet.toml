@@ -1,13 +1,21 @@
 [project]
 name = 'droplinked-stacks-contract'
 description = 'droplinked is a commerce infrastructure network operating as a decentralized inventory management and sales tracking system for digital and physical goods.'
-authors = ["Erfan Yeganegi <yeganegierfan@gmail.com>"]
+authors = ['Erfan Yeganegi <yeganegierfan@gmail.com>']
 telemetry = true
-cache_dir = './.cache'
-requirements = []
+
+[contracts.droplinked-operator]
+path = 'contracts/droplinked-operator.clar'
+clarity_version = 2
+epoch = 2.4
 
 [contracts.droplinked-sft-trait]
 path = 'contracts/droplinked-sft-trait.clar'
+clarity_version = 2
+epoch = 2.4
+
+[contracts.droplinked-token]
+path = 'contracts/droplinked-token.clar'
 clarity_version = 2
 epoch = 2.4
 
