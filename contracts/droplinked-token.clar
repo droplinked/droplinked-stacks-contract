@@ -1,6 +1,6 @@
 (impl-trait .droplinked-sft-trait.sft-trait)
 
-(define-constant err-operator-only (err u100))
+(define-constant err-droplinked-operator-only (err u100))
 
 (define-fungible-token product)
 (define-non-fungible-token sku { id: uint, owner: principal })
@@ -13,13 +13,31 @@
 
 (define-data-var last-sku-id uint u0)
 
+(define-public 
+  (mint 
+    (amount uint)
+    (recipient principal)
+    (uri (string-ascii 256))
+  )
+  (let 
+    (
+      (id (+ (var-get last-sku-id) u1))
+    )
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (try! (nft-mint? sku { id: id, owner: recipient } recipient))
+    (try! (ft-mint? product amount recipient))
+    (print { type: "sft_mint", token-id: id, amount: amount, recipient: recipient })
+    (ok id)
+  )
+)
+
 (define-public (transfer (id uint) (amount uint) (sender principal) (recipient principal))
   (let
     (
       (sender-balance (unwrap-panic (get-balance id sender)))
       (recipient-balance (unwrap-panic (get-balance id recipient)))
     )
-    (asserts! (is-eq contract-caller .droplinked-operator) err-operator-only)
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
     (try! (ft-transfer? product amount sender recipient))
     (try! (burn-and-mint { id: id, owner: sender }))
     (try! (burn-and-mint { id: id, owner: recipient }))
