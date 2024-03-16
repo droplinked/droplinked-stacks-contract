@@ -1,9 +1,10 @@
 (define-constant err-droplinked-only (err u100))
+(define-constant err-producer-only (err u101))
 
 (define-constant err-invalid-price (err u200))
 (define-constant err-invalid-type (err u201))
 
-(define-constant err-request-duplicated (err u300))
+(define-constant err-request-duplicate (err u300))
 
 (define-data-var droplinked principal 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM)
 
@@ -47,5 +48,22 @@
     )
     (try! (contract-call? .droplinked-base insert-product-information product-id tx-sender price commission type destination))
     (ok product-id)
+  )
+)
+
+(define-public 
+  (request-product
+    (product-id uint)
+    (producer principal)
+  )
+  (let
+    (
+      (request-id (+ (contract-call? .droplinked-base get-last-request-id) u1))
+    )
+    (asserts! (is-eq producer tx-sender) err-producer-only)
+    (asserts! (is-eq (contract-call? .droplinked-base has-producer-requested-product? product-id producer) false) err-request-duplicate)
+    (try! (contract-call? .droplinked-base set-last-request-id request-id))
+    ;; implement function
+    (ok true)
   )
 )
