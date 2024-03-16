@@ -42,6 +42,8 @@
 ;; 0x02 is physical product
 (define-map types uint (buff 1))
 
+(define-data-var last-request-id uint u0)
+
 (define-public
   (insert-product-information
     (product-id uint)
@@ -57,6 +59,17 @@
     (asserts! (map-insert commissions { product-id: product-id, owner: owner } commission) err-product-exists)
     (asserts! (map-insert types product-id type) err-product-exists)
     (ok true)
+  )
+)
+
+;; updates the `last-request-id` variable and returns true if updated successfully
+(define-public 
+  (set-last-request-id
+    (request-id uint)
+  )
+  (begin 
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (ok (var-set last-request-id request-id))
   )
 )
 
@@ -88,4 +101,10 @@
       }
     )
   )
+)
+
+;; returns most recent request-id
+(define-read-only 
+  (get-last-request-id)
+  (var-get last-request-id)
 )
