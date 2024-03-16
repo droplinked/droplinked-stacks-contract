@@ -1,5 +1,6 @@
 (define-constant err-droplinked-only (err u100))
-(define-constant err-producer-only (err u101))
+(define-constant err-publisher-only (err u101))
+(define-constant err-producer-only (err u102))
 
 (define-constant err-invalid-price (err u200))
 (define-constant err-invalid-type (err u201))
@@ -55,15 +56,19 @@
   (request-product
     (product-id uint)
     (producer principal)
+    (publisher principal)
   )
-  (let
-    (
-      (request-id (+ (contract-call? .droplinked-base get-last-request-id) u1))
+  (begin
+    (asserts! (is-eq publisher tx-sender) err-publisher-only)
+    (asserts! (is-eq (contract-call? .droplinked-base has-producer-requested-product? product-id producer publisher) false) err-request-duplicate)
+    (let 
+      (
+        (request-id (try! (contract-call? .droplinked-base insert-request product-id producer publisher)))
+      )
+      (try! (contract-call? .droplinked-base insert-publisher-request request-id publisher))
+      (try! (contract-call? .droplinked-base insert-producer-request request-id producer))
+      (try! (contract-call? .droplinked-base insert-is-requested product-id producer publisher))
+      (ok request-id)
     )
-    (asserts! (is-eq producer tx-sender) err-producer-only)
-    (asserts! (is-eq (contract-call? .droplinked-base has-producer-requested-product? product-id producer) false) err-request-duplicate)
-    (try! (contract-call? .droplinked-base set-last-request-id request-id))
-    ;; implement function
-    (ok true)
   )
 )
