@@ -11,6 +11,7 @@
   }
 )
 
+;; maps (product-id, owner) pairs to product prices
 (define-map prices
   {
     product-id: uint,
