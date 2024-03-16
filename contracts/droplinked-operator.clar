@@ -46,7 +46,7 @@
       )
       err-invalid-type
     )
-    (try! (contract-call? .droplinked-base insert-product-information product-id tx-sender price commission type destination))
+    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission type destination))
     (ok product-id)
   )
 )

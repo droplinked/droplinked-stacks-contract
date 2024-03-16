@@ -45,7 +45,7 @@
 (define-data-var last-request-id uint u0)
 
 (define-public
-  (insert-product-information
+  (insert-product
     (product-id uint)
     (owner principal)
     (price uint)
