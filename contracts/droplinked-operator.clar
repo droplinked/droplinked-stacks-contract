@@ -9,6 +9,7 @@
 (define-constant TYPE_POD 0x01)
 (define-constant TYPE_PHYSICAL 0x02)
 
+;; allows the current droplinked owner to update the droplinked address
 (define-public 
   (set-droplinked
     (address principal)
