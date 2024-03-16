@@ -28,6 +28,10 @@
   uint
 )
 
+;; maps (product-id) to product type
+;; 0x00 is digital product
+;; 0x01 is pod product
+;; 0x02 is physical product
 (define-map types uint (buff 1))
 
 (define-public
