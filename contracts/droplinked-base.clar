@@ -11,13 +11,6 @@
   }
 )
 
-(define-map issuers uint 
-  {
-    issuer: principal,
-    royalty: uint
-  }
-)
-
 (define-map prices
   {
     product-id: uint,
