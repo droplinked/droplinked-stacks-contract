@@ -3,6 +3,8 @@
 (define-constant err-invalid-price (err u200))
 (define-constant err-invalid-type (err u201))
 
+(define-constant err-request-duplicated (err u300))
+
 (define-data-var droplinked principal 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM)
 
 (define-constant TYPE_DIGITAL 0x00)

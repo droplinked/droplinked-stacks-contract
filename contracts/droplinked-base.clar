@@ -11,6 +11,14 @@
   }
 )
 
+(define-map producers-requests 
+  {
+    product-id: uint,
+    producer: principal
+  }
+  bool
+)
+
 ;; maps (product-id, owner) pairs to product prices
 (define-map prices
   {
@@ -52,8 +60,10 @@
   )
 )
 
+;; returns product price for given (product-id, owner) pair
+;; returns an optional(uint) containing the price if found, otherwise returns none
 (define-read-only
-  (get-price
+  (get-price?
     (product-id uint)
     (owner principal)
   )
@@ -62,5 +72,20 @@
       product-id: product-id,
       owner: owner
     }
+  )
+)
+;; returns true if the producer has requested the product, otherwise returns false
+(define-read-only 
+  (has-producer-requested-product?
+    (product-id uint)
+    (producer principal)
+  )
+  (default-to false 
+    (map-get? producers-requests 
+      {
+        product-id: product-id,
+        producer: producer
+      }
+    )
   )
 )
