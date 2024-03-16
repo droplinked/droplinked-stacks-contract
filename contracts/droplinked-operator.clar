@@ -5,3 +5,10 @@
     publisher: principal
   }
 )
+
+(define-map issuers uint 
+  {
+    issuer: principal,
+    royalty: uint
+  }
+)
