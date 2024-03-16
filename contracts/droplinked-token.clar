@@ -31,7 +31,13 @@
   )
 )
 
-(define-public (transfer (id uint) (amount uint) (sender principal) (recipient principal))
+(define-public
+  (transfer
+    (id uint)
+    (amount uint)
+    (sender principal)
+    (recipient principal)
+  )
   (let
     (
       (sender-balance (unwrap-panic (get-balance id sender)))
@@ -48,7 +54,14 @@
   )
 )
 
-(define-public (transfer-memo (id uint) (amount uint) (sender principal) (recipient principal) (memo (buff 34))) 
+(define-public 
+  (transfer-memo
+    (id uint)
+    (amount uint)
+    (sender principal)
+    (recipient principal)
+    (memo (buff 34))
+  ) 
   (begin 
     (try! (transfer id amount sender recipient))
     (print memo)
@@ -56,31 +69,51 @@
   )
 )
 
-(define-read-only (get-balance (id uint) (owner principal))
+(define-read-only 
+  (get-balance
+    (id uint)
+    (owner principal)
+  )
   (ok (default-to u0 (map-get? balances { id: id, owner: owner })))
 )
 
-(define-read-only (get-overall-balance (owner principal))
+(define-read-only
+  (get-overall-balance
+    (owner principal)
+  )
   (ok (ft-get-balance product owner))
 )
 
-(define-read-only (get-overall-supply)
+(define-read-only
+  (get-overall-supply)
   (ok (ft-get-supply product))
 )
 
-(define-read-only (get-total-supply (id uint))
+(define-read-only
+  (get-total-supply
+    (id uint)
+  )
   (ok (default-to u0 (map-get? supplies id)))
 )
 
-(define-read-only (get-decimals (id uint))
+(define-read-only
+  (get-decimals
+    (id uint)
+  )
   (ok u0)
 )
 
-(define-read-only (get-token-uri (id uint))
+(define-read-only 
+  (get-token-uri
+    (id uint)
+  )
   (ok (map-get? uris id))
 )
 
-(define-private (burn-and-mint (sku-id { id: uint, owner: principal }))
+(define-private 
+  (burn-and-mint
+    (sku-id { id: uint, owner: principal })
+  )
   (begin 
     (and 
       (is-some (nft-get-owner? sku sku-id))
