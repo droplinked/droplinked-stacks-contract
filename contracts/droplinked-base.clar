@@ -11,10 +11,27 @@
   }
 )
 
+(define-map is-requested 
+  { 
+    product-id: uint,
+    producer: principal,
+    publisher: principal
+  }
+  bool
+)
+
 (define-map producers-requests 
   {
-    product-id: uint,
+    request-id: uint,
     producer: principal
+  }
+  bool
+)
+
+(define-map publishers-requests 
+  {
+    request-id: uint,
+    publisher: principal
   }
   bool
 )
@@ -62,14 +79,85 @@
   )
 )
 
-;; updates the `last-request-id` variable and returns true if updated successfully
+;; creates a new request and returns generated request-id
 (define-public 
-  (set-last-request-id
+  (insert-request
+    (product-id uint)
+    (producer principal)
+    (publisher principal)
+  )
+  (let 
+    (
+      (request-id (+ (var-get last-request-id) u1))
+    )
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (map-insert requests 
+      request-id
+      {
+        product-id: product-id,
+        producer: producer,
+        publisher: publisher
+      }
+    )
+    (var-set last-request-id request-id)
+    (ok request-id)
+  )
+)
+
+(define-public 
+  (insert-publisher-request
     (request-id uint)
+    (publisher principal)
   )
   (begin 
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
-    (ok (var-set last-request-id request-id))
+    (map-insert publishers-requests 
+      {
+        request-id: request-id,
+        publisher: publisher
+      }
+     true
+    )
+    (ok true)
+  )
+)
+
+(define-public 
+  (insert-producer-request
+    (request-id uint)
+    (producer principal)
+  )
+  (begin 
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (map-insert producers-requests 
+      {
+        request-id: request-id,
+        producer: producer
+      }
+     true
+    )
+    (ok true)
+  )
+)
+
+(define-public 
+  (insert-is-requested
+    (product-id uint)
+    (producer principal)
+    (publisher principal)
+  )
+  (begin 
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (ok
+      (map-insert is-requested 
+        {
+          product-id: product-id,
+          producer: producer,
+          publisher: publisher
+        }
+        true
+      )
+    )
   )
 )
 
@@ -87,24 +175,21 @@
     }
   )
 )
+
 ;; returns true if the producer has requested the product, otherwise returns false
 (define-read-only 
   (has-producer-requested-product?
     (product-id uint)
     (producer principal)
+    (publisher principal)
   )
-  (default-to false 
-    (map-get? producers-requests 
+  (is-some 
+    (map-get? is-requested  
       {
         product-id: product-id,
-        producer: producer
+        producer: producer,
+        publisher: publisher
       }
     )
   )
-)
-
-;; returns most recent request-id
-(define-read-only 
-  (get-last-request-id)
-  (var-get last-request-id)
 )
