@@ -2,6 +2,7 @@
 
 (define-constant err-product-exists (err u200))
 
+;; maps request-id to product details (product-id, producer, publisher)
 (define-map requests uint 
   {
     product-id: uint,
