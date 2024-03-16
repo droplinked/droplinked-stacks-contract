@@ -1,30 +1,14 @@
+(define-map requests uint 
+  {
+    product-id: uint,
+    producer: principal,
+    publisher: principal
+  }
+)
 
-;; title: droplinked-base
-;; version:
-;; summary:
-;; description:
-
-;; traits
-;;
-
-;; token definitions
-;;
-
-;; constants
-;;
-
-;; data vars
-;;
-
-;; data maps
-;;
-
-;; public functions
-;;
-
-;; read only functions
-;;
-
-;; private functions
-;;
-
+(define-map issuers uint 
+  {
+    issuer: principal,
+    royalty: uint
+  }
+)
