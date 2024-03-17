@@ -94,7 +94,7 @@
     (try! (contract-call? .droplinked-base remove-producer-request request-id producer))
     (try! (contract-call? .droplinked-base remove-publisher-request request-id publisher))
     (try! (contract-call? .droplinked-base remove-is-requested product-id producer publisher))
-    (ok true)
+    (ok request-id)
   )
 )
 
@@ -110,6 +110,27 @@
     (asserts! (is-eq producer tx-sender) err-producer-only)
     (asserts! (is-eq producer (get producer request)) err-producer-only)
     (try! (contract-call? .droplinked-base update-request-status request-id STATUS_ACCEPTED))
-    (ok true)
+    (ok request-id)
+  )
+)
+
+(define-public 
+  (reject-request
+    (request-id uint)
+    (producer principal)
+  )
+  (let 
+    (
+      (request (unwrap! (contract-call? .droplinked-base get-request? request-id) err-invalid-request-id))
+      (product-id (get product-id request))
+      (publisher (get publisher request))
+    )
+    (asserts! (is-eq producer tx-sender) err-producer-only)
+    (asserts! (is-eq producer (get producer request)) err-producer-only)
+    (try! (contract-call? .droplinked-base remove-request request-id))
+    (try! (contract-call? .droplinked-base remove-producer-request request-id producer))
+    (try! (contract-call? .droplinked-base remove-publisher-request request-id publisher))
+    (try! (contract-call? .droplinked-base remove-is-requested product-id producer publisher))
+    (ok request-id)
   )
 )
