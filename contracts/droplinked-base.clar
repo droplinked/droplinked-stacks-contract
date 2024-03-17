@@ -2,12 +2,12 @@
 
 (define-constant err-product-exists (err u200))
 
-;; maps (request-id) to request details (product-id, producer, publisher)
 (define-map requests uint 
   {
     product-id: uint,
     producer: principal,
-    publisher: principal
+    publisher: principal,
+    status: (buff 1)
   }
 )
 
@@ -36,7 +36,6 @@
   bool
 )
 
-;; maps (product-id, owner) pairs to product prices
 (define-map prices
   {
     product-id: uint,
@@ -53,10 +52,6 @@
   uint
 )
 
-;; maps (product-id) to product type
-;; 0x00 is digital product
-;; 0x01 is pod product
-;; 0x02 is physical product
 (define-map types uint (buff 1))
 
 (define-data-var last-request-id uint u0)
@@ -79,12 +74,12 @@
   )
 )
 
-;; creates a new request and returns generated request-id
 (define-public 
   (insert-request
     (product-id uint)
     (producer principal)
     (publisher principal)
+    (status (buff 1))
   )
   (let 
     (
@@ -96,7 +91,8 @@
       {
         product-id: product-id,
         producer: producer,
-        publisher: publisher
+        publisher: publisher,
+        status: status
       }
     )
     (var-set last-request-id request-id)
@@ -140,6 +136,69 @@
   )
 )
 
+(define-public
+  (update-request-status
+    (request-id uint)
+    (status (buff 1))
+  )
+  (let 
+    (
+      (request (unwrap-panic (map-get? requests request-id)))
+    )
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (ok 
+      (map-set requests request-id 
+        (merge 
+          {
+            product-id: (get product-id request),
+            producer: (get producer request),
+            publisher: (get publisher request)
+          }
+          {
+            status: status
+          }
+        )
+      )
+    )
+  )
+)
+
+(define-public 
+  (remove-publisher-request
+    (request-id uint)
+    (publisher principal)
+  )
+  (begin 
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (ok 
+      (map-delete publishers-requests 
+        {
+          request-id: request-id,
+          publisher: publisher
+        }
+      )
+    )
+  )
+)
+
+(define-public 
+  (remove-producer-request
+    (request-id uint)
+    (producer principal)
+  )
+  (begin 
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (ok 
+      (map-delete producers-requests 
+        {
+          request-id: request-id,
+          producer: producer
+        }
+      )
+    )
+  )
+)
+
 (define-public 
   (insert-is-requested
     (product-id uint)
@@ -161,8 +220,26 @@
   )
 )
 
-;; returns product price for given (product-id, owner) pair
-;; returns an optional(uint) containing the price if found, otherwise returns none
+(define-public 
+  (remove-is-requested
+    (product-id uint)
+    (producer principal)
+    (publisher principal)
+  )
+  (begin 
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (ok
+      (map-delete is-requested 
+        {
+          product-id: product-id,
+          producer: producer,
+          publisher: publisher
+        }
+      )
+    )
+  )
+)
+
 (define-read-only
   (get-price?
     (product-id uint)
@@ -176,7 +253,6 @@
   )
 )
 
-;; returns true if the producer has requested the product, otherwise returns false
 (define-read-only 
   (has-producer-requested-product?
     (product-id uint)
@@ -192,4 +268,12 @@
       }
     )
   )
+)
+
+
+(define-read-only 
+  (get-request?
+    (request-id uint)
+  )
+  (map-get? requests request-id)
 )
