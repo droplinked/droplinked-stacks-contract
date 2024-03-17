@@ -101,6 +101,16 @@
 )
 
 (define-public 
+  (remove-request
+    (request-id uint)
+  )
+  (begin
+    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (ok (map-delete requests request-id))
+  )
+)
+
+(define-public 
   (insert-publisher-request
     (request-id uint)
     (publisher principal)
