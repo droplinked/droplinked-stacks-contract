@@ -11,7 +11,6 @@
   }
 )
 
-;; maps (product-id, producer, publisher) to a boolean value indicating if the publisher has requested the product-id from the producer
 (define-map is-requested 
   { 
     product-id: uint,
