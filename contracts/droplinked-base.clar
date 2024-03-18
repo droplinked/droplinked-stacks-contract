@@ -1,7 +1,5 @@
 (define-constant err-droplinked-operator-only (err u100))
 
-(define-constant err-product-exists (err u200))
-
 (define-map requests uint 
   {
     product-id: uint,
@@ -88,9 +86,9 @@
   )
   (begin 
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
-    (asserts! (map-insert prices { product-id: product-id, owner: owner } price) err-product-exists)
-    (asserts! (map-insert commissions { product-id: product-id, owner: owner } commission) err-product-exists)
-    (asserts! (map-insert types product-id type) err-product-exists)
+    (map-insert prices { product-id: product-id, owner: owner } price)
+    (map-insert commissions { product-id: product-id, owner: owner } commission)
+    (map-insert types product-id type)
     (ok true)
   )
 )
