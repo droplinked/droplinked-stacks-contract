@@ -52,9 +52,9 @@
 
 (define-map types uint (buff 1))
 
-(define-map beneficiaries-head uint uint)
+(define-map beneficiaries-links uint uint)
 
-(define-map beneficiaries-list uint
+(define-map beneficiaries-lists uint
   {
     is-percentage: bool,
     value: uint,
@@ -78,18 +78,33 @@
         is-percentage: bool,
         value: uint,
         address: principal,
-        next: (optional uint)
       }
     ))
     (type (buff 1))
     (destination principal)
   )
-  (begin 
+  (begin
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
     (map-insert prices { product-id: product-id, owner: owner } price)
     (map-insert commissions { product-id: product-id, owner: owner } commission)
     (map-insert types product-id type)
-    (ok true)
+    (if (>= (len beneficiaries) u1)
+      (let 
+        (
+          (beneficiary-link (+ (var-get last-beneficiary-id) u1))
+        )
+        (map-insert beneficiaries-links product-id beneficiary-link)
+        (fold insert-beneficiary-iter beneficiaries 
+          { 
+            length: (len beneficiaries),
+            index: u0, 
+            benificiary-id: beneficiary-link
+          }
+        )
+        (ok true)
+      )
+      (ok true)
+    )
   )
 )
 
@@ -299,10 +314,49 @@
   )
 )
 
-
 (define-read-only 
   (get-request?
     (request-id uint)
   )
   (map-get? requests request-id)
+)
+
+(define-private 
+  (insert-beneficiary-iter
+    (beneficiary 
+      {
+        is-percentage: bool,
+        value: uint,
+        address: principal,
+      }
+    )
+    (previous-result 
+      { 
+        length: uint,
+        index: uint,
+        benificiary-id: uint
+      }
+    )
+  )
+  (let 
+    (
+      (length (get length previous-result))
+      (index (get index previous-result))
+      (benificiary-id (get benificiary-id previous-result))
+    )
+    (if (is-eq index (- length u1)) 
+      (begin 
+        (map-insert beneficiaries-lists benificiary-id (merge beneficiary { next: none }))
+        (var-set last-beneficiary-id benificiary-id)
+        { length: length, index: index, benificiary-id: benificiary-id }
+      )
+      (let 
+        (
+          (next-benificiary-id (+ benificiary-id u1))
+        )
+        (map-insert beneficiaries-lists benificiary-id (merge beneficiary { next: (some next-benificiary-id) }))
+        { length: length, index: (+ index u1), benificiary-id: next-benificiary-id }
+      )
+    )
+  )
 )
