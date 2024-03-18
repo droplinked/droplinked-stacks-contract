@@ -38,7 +38,6 @@
         is-percentage: bool,
         value: uint,
         address: principal,
-        next: (optional uint)
       }
     ))
     (amount uint)
