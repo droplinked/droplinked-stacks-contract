@@ -33,6 +33,14 @@
     (uri (string-ascii 256))
     (price uint)
     (commission uint)
+    (beneficiaries (list 16 
+      {
+        is-percentage: bool,
+        value: uint,
+        address: principal,
+        next: (optional uint)
+      }
+    ))
     (amount uint)
     (type (buff 1))
     (recipient principal)
@@ -51,7 +59,7 @@
       )
       err-invalid-type
     )
-    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission type destination))
+    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission beneficiaries type destination))
     (ok product-id)
   )
 )

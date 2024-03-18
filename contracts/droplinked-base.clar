@@ -54,7 +54,20 @@
 
 (define-map types uint (buff 1))
 
+(define-map beneficiaries-head uint uint)
+
+(define-map beneficiaries-list uint
+  {
+    is-percentage: bool,
+    value: uint,
+    address: principal,
+    next: (optional uint)
+  }
+)
+
 (define-data-var last-request-id uint u0)
+
+(define-data-var last-beneficiary-id uint u0)
 
 (define-public
   (insert-product
@@ -62,6 +75,14 @@
     (owner principal)
     (price uint)
     (commission uint)
+    (beneficiaries (list 16 
+      {
+        is-percentage: bool,
+        value: uint,
+        address: principal,
+        next: (optional uint)
+      }
+    ))
     (type (buff 1))
     (destination principal)
   )
