@@ -63,6 +63,14 @@
   }
 )
 
+(define-map destinations 
+  {
+    product-id: uint,
+    producer: principal
+  }
+  principal
+)
+
 (define-data-var last-request-id uint u0)
 
 (define-data-var last-beneficiary-id uint u0)
@@ -88,6 +96,13 @@
     (map-insert prices { product-id: product-id, owner: owner } price)
     (map-insert commissions { product-id: product-id, owner: owner } commission)
     (map-insert types product-id type)
+    (map-insert destinations 
+      {
+        product-id: product-id,
+        producer: owner
+      }
+      destination
+    )
     (if (>= (len beneficiaries) u1)
       (let 
         (
@@ -295,6 +310,27 @@
       owner: owner
     }
   )
+)
+
+(define-read-only 
+  (get-commission?
+    (product-id uint)
+    (owner principal)
+  )
+  (map-get? commissions 
+    {
+      product-id: product-id,
+      owner: owner
+    }
+  )
+)
+
+
+(define-read-only 
+  (get-type?
+    (product-id uint)
+  )
+  (map-get? types product-id)
 )
 
 (define-read-only 
