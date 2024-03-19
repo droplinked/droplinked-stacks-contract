@@ -325,6 +325,18 @@
   )
 )
 
+(define-read-only 
+  (get-destination?
+    (product-id uint)
+    (producer principal)
+  )
+  (map-get? destinations 
+    {
+      product-id: product-id,
+      producer: producer
+    }
+  )
+)
 
 (define-read-only 
   (get-type?
