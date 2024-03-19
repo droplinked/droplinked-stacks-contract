@@ -310,6 +310,14 @@
   )
 )
 
+
+(define-read-only 
+  (get-type?
+    (product-id uint)
+  )
+  (map-get? types product-id)
+)
+
 (define-read-only 
   (has-producer-requested-product?
     (product-id uint)
