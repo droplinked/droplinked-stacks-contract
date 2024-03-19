@@ -298,6 +298,19 @@
 )
 
 (define-read-only 
+  (get-commission?
+    (product-id uint)
+    (owner principal)
+  )
+  (map-get? commissions 
+    {
+      product-id: product-id,
+      owner: owner
+    }
+  )
+)
+
+(define-read-only 
   (has-producer-requested-product?
     (product-id uint)
     (producer principal)
