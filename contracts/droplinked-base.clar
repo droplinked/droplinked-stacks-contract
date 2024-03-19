@@ -63,6 +63,14 @@
   }
 )
 
+(define-map destinations 
+  {
+    product-id: uint,
+    producer: principal
+  }
+  principal
+)
+
 (define-data-var last-request-id uint u0)
 
 (define-data-var last-beneficiary-id uint u0)
