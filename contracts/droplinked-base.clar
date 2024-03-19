@@ -367,6 +367,13 @@
 )
 
 (define-read-only 
+  (get-benificiary-link?
+    (product-id uint)
+  )
+  (map-get? beneficiaries-links product-id)
+)
+
+(define-read-only 
   (has-producer-requested-product?
     (product-id uint)
     (producer principal)
