@@ -96,6 +96,13 @@
     (map-insert prices { product-id: product-id, owner: owner } price)
     (map-insert commissions { product-id: product-id, owner: owner } commission)
     (map-insert types product-id type)
+    (map-insert destinations 
+      {
+        product-id: product-id,
+        producer: owner
+      }
+      destination
+    )
     (if (>= (len beneficiaries) u1)
       (let 
         (
