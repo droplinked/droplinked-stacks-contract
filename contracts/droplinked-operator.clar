@@ -18,6 +18,8 @@
 (define-constant STATUS_PENDING 0x00)
 (define-constant STATUS_ACCEPTED 0x01)
 
+(define-constant DROPLINKED_FEE u100)
+
 (define-public 
   (set-droplinked
     (address principal)
@@ -44,6 +46,12 @@
     (type (buff 1))
     (recipient principal)
     (destination principal)
+    (issuer 
+      {
+        address: principal,
+        value: uint
+      }
+    )
   )
   (let 
     (
@@ -58,7 +66,7 @@
       )
       err-invalid-type
     )
-    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission beneficiaries type destination))
+    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission beneficiaries type destination issuer))
     (ok product-id)
   )
 )
@@ -122,6 +130,20 @@
 )
 
 (define-public 
+  (purchase-product
+    (shop principal)
+    (cart (list 64 
+      {
+        id: uint,
+        affiliate: bool,
+        amount: uint
+      }
+    ))
+  )
+  (fold purchase-product-iter cart (ok shop))
+)
+
+(define-public 
   (reject-request
     (request-id uint)
     (producer principal)
@@ -139,5 +161,180 @@
     (try! (contract-call? .droplinked-base remove-publisher-request request-id publisher))
     (try! (contract-call? .droplinked-base remove-is-requested product-id producer publisher))
     (ok request-id)
+  )
+)
+
+;; #[allow(unchecked_data)]
+(define-private 
+  (purchase-product-iter
+    (item 
+      {
+        id: uint,
+        affiliate: bool,
+        amount: uint
+      }
+    )
+    (shop-response (response principal uint))
+  )
+  (match shop-response
+    shop
+    (if (get affiliate item)
+      (let 
+        (
+          (request (unwrap! (contract-call? .droplinked-base get-request? (get id item)) (err u200)))
+          (status (get status request))
+          (publisher (get publisher request))
+          (producer (get producer request))
+          (product-id (get product-id request))
+        )
+        (asserts! (is-eq status STATUS_ACCEPTED) (err u200))
+        (asserts! (is-eq publisher shop) (err u200))
+        (ok shop)
+      )
+      (let 
+        (
+          (producer shop)
+          (product-id (get id item))
+        )
+        (ok shop)
+      )
+    )
+    previous-err
+    (err u200)
+  )
+)
+
+;; #[allow(unchecked_data)]
+(define-private 
+  (purchase-product-transfers
+    (purchaser principal)
+    (product-id uint)
+    (amount uint)
+    (producer principal)
+    (optional-publisher (optional principal))
+  )
+  (let 
+    (
+      (price (unwrap! (contract-call? .droplinked-base get-price? product-id producer) (err u200)))
+      (commission (unwrap! (contract-call? .droplinked-base get-commission? product-id producer) (err u200)))
+      (type (unwrap! (contract-call? .droplinked-base get-type? product-id) (err u200)))
+      (destination (unwrap! (contract-call? .droplinked-base get-destination? product-id producer) (err u200)))
+      (issuer (unwrap! (contract-call? .droplinked-base get-royalty? product-id) (err u200)))
+    )
+    (let 
+      (
+        (publisher-share (if (is-some optional-publisher) (apply-percentage price commission) u0))
+        (royalty-share (apply-percentage price (get value issuer)))
+        (droplinked-share (apply-percentage price DROPLINKED_FEE))
+      )
+      (try! (stx-transfer? droplinked-share purchaser (var-get droplinked)))
+      (try! (stx-transfer? royalty-share purchaser (get address issuer)))
+      (try! (match optional-publisher publisher 
+        (if (is-eq publisher-share u0) 
+          (ok true)
+          (stx-transfer? publisher-share purchaser publisher)
+        )
+        (ok true)
+      ))
+      (let 
+        (
+          (producer-share 
+            (- price 
+              publisher-share
+              royalty-share
+              droplinked-share 
+              (try! (pay-product-benificiaries purchaser price (contract-call? .droplinked-base get-benificiary-link? product-id)))
+            )
+          )
+        )
+        (try! (stx-transfer? producer-share purchaser producer))
+        (try! (contract-call? .droplinked-token transfer product-id amount producer purchaser))
+        (ok true)
+      )
+    )
+  )
+)
+
+;; #[allow(unchecked_data)]
+(define-private 
+  (apply-percentage
+    (value uint)
+    (percentage uint)
+  )
+  (/ (* value percentage) u10000)
+)
+
+;; #[allow(unchecked_data)]
+(define-private 
+  (pay-product-benificiaries
+    (purchaser principal)
+    (price uint)
+    (optional-benificiary-link (optional uint))
+  )
+  (match optional-benificiary-link benificiary-link
+    (ok (get beneficiaries-share
+      (try! (fold pay-product-beneficiaries-iter 0x00000000000000000000000000000000 
+        (ok 
+          {
+            purchaser: purchaser,
+            price: price,
+            next: (some benificiary-link),
+            beneficiaries-share: u0
+          }
+        )
+      )
+    )))
+    (ok u0)
+  )
+)
+
+;; #[allow(unchecked_data)]
+(define-private 
+  (pay-product-beneficiaries-iter
+    (i (buff 1))
+    (previous-response (response 
+      {
+        purchaser: principal,
+        price: uint,
+        next: (optional uint),
+        beneficiaries-share: uint
+      }
+      uint
+    ))
+  )
+  (match previous-response result
+    (let 
+      (
+        (purchaser (get purchaser result))
+        (price (get price result))
+        (next (get next result))
+      )
+      (match next benificiary-id 
+        (let
+          (
+            (beneficiary (unwrap-panic (contract-call? .droplinked-base get-benificiary? benificiary-id)))
+            (beneficiary-share 
+              (if (get is-percentage beneficiary)
+                (apply-percentage price (get value beneficiary))
+                (get value beneficiary)
+              )
+            )
+            (next-beneficiary (get next beneficiary))
+          )
+          (try! (stx-transfer? beneficiary-share purchaser (get address beneficiary)))
+          (ok 
+            {
+              purchaser: purchaser,
+              price: price,
+              next: next-beneficiary,
+              beneficiaries-share: (+ (get beneficiaries-share result) beneficiary-share)
+            }
+          )
+        )
+        (ok result)
+      )
+    )
+    previous-err
+    previous-response
   )
 )
