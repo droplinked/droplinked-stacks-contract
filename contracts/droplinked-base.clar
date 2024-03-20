@@ -71,6 +71,13 @@
   principal
 )
 
+(define-map issuers uint 
+  {
+    address: principal,
+    value: uint
+  }
+)
+
 (define-data-var last-request-id uint u0)
 
 (define-data-var last-beneficiary-id uint u0)
@@ -90,6 +97,12 @@
     ))
     (type (buff 1))
     (destination principal)
+    (issuer 
+      {
+        address: principal,
+        value: uint
+      }
+    )
   )
   (begin
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
@@ -103,6 +116,7 @@
       }
       destination
     )
+    (map-insert issuers product-id issuer)
     (if (>= (len beneficiaries) u1)
       (let 
         (
@@ -325,12 +339,45 @@
   )
 )
 
+(define-read-only 
+  (get-destination?
+    (product-id uint)
+    (producer principal)
+  )
+  (map-get? destinations 
+    {
+      product-id: product-id,
+      producer: producer
+    }
+  )
+)
+
+(define-read-only 
+  (get-royalty?
+    (product-id uint)
+  )
+  (map-get? issuers product-id)
+)
 
 (define-read-only 
   (get-type?
     (product-id uint)
   )
   (map-get? types product-id)
+)
+
+(define-read-only 
+  (get-benificiary-link?
+    (product-id uint)
+  )
+  (map-get? beneficiaries-links product-id)
+)
+
+(define-read-only 
+  (get-benificiary?
+    (benificiary-id uint)
+  )
+  (map-get? beneficiaries-lists benificiary-id)
 )
 
 (define-read-only 
