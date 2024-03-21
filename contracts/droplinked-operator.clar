@@ -52,6 +52,7 @@
         value: uint
       }
     )
+    (manager principal)
   )
   (let 
     (
@@ -66,7 +67,7 @@
       )
       err-invalid-type
     )
-    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission beneficiaries type destination issuer))
+    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission beneficiaries type destination issuer manager))
     (ok product-id)
   )
 )
@@ -131,6 +132,7 @@
 
 (define-public 
   (purchase-product
+  (purchaser principal)
     (shop principal)
     (cart (list 64 
       {
@@ -140,7 +142,10 @@
       }
     ))
   )
-  (fold purchase-product-iter cart (ok shop))
+  (begin
+    (asserts! (is-eq purchaser tx-sender) (err u200))
+    (fold purchase-product-iter cart (ok shop))
+  )
 )
 
 (define-public 
