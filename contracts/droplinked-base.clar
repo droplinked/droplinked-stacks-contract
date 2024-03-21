@@ -1,16 +1,20 @@
 (define-constant err-droplinked-operator-only (err u100))
 
+;; (product-id) => producer
+;;
+;; maps each `product-id` to its `producer`
+(define-map producers uint principal)
+
 ;; (request-id) => (product-id, producer, publisher, status)
 ;;
-;; when a publisher requests a product, a unique request-id is generated and used to store details about that request.
-;; request status is represented by a single byte:
+;; when a `publisher` requests a product, a unique `request-id` is generated and used to store details about that request.
+;; request `status` is represented by a single byte:
 ;;   - 0x00: The request is pending, awaiting the producer's approval.
-;;   - 0x01: The producer has greenlit the request, indicating acceptance.
-;; rejected requests are purged from the map, meaning a request-id might not have a corresponding entry if the request was denied.
+;;   - 0x01: The `producer` has greenlit the request, indicating acceptance.
+;; rejected requests are purged, meaning a `request-id`  request was denied.
 (define-map requests uint 
   {
     product-id: uint,
-    producer: principal,
     publisher: principal,
     status: (buff 1)
   }
@@ -25,7 +29,6 @@
 (define-map is-requested 
   { 
     product-id: uint,
-    producer: principal,
     publisher: principal
   }
   bool
@@ -166,11 +169,11 @@
       (request-id (+ (var-get last-request-id) u1))
     )
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (map-insert producers product-id producer)
     (map-insert requests 
       request-id
       {
         product-id: product-id,
-        producer: producer,
         publisher: publisher,
         status: status
       }
@@ -241,7 +244,6 @@
         (merge 
           {
             product-id: (get product-id request),
-            producer: (get producer request),
             publisher: (get publisher request)
           }
           {
@@ -292,7 +294,6 @@
 (define-public 
   (insert-is-requested
     (product-id uint)
-    (producer principal)
     (publisher principal)
   )
   (begin 
@@ -301,7 +302,6 @@
       (map-insert is-requested 
         {
           product-id: product-id,
-          producer: producer,
           publisher: publisher
         }
         true
@@ -313,7 +313,6 @@
 (define-public 
   (remove-is-requested
     (product-id uint)
-    (producer principal)
     (publisher principal)
   )
   (begin 
@@ -322,7 +321,6 @@
       (map-delete is-requested 
         {
           product-id: product-id,
-          producer: producer,
           publisher: publisher
         }
       )
@@ -400,14 +398,12 @@
 (define-read-only 
   (has-producer-requested-product?
     (product-id uint)
-    (producer principal)
     (publisher principal)
   )
   (is-some 
     (map-get? is-requested  
       {
         product-id: product-id,
-        producer: producer,
         publisher: publisher
       }
     )
@@ -419,6 +415,13 @@
     (request-id uint)
   )
   (map-get? requests request-id)
+)
+
+(define-read-only 
+  (get-producer?
+    (product-id uint)
+  )
+  (map-get? producers product-id)
 )
 
 (define-private 
