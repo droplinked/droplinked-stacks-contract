@@ -69,13 +69,10 @@
   }
 )
 
-(define-map destinations 
-  {
-    product-id: uint,
-    producer: principal
-  }
-  principal
-)
+;; (product-id) => (destination)
+;;
+;; stores payment destination addresses for each product.
+(define-map destinations uint principal)
 
 (define-map issuers uint 
   {
@@ -118,13 +115,7 @@
     (map-insert prices product-id price)
     (map-insert commissions product-id commission)
     (map-insert types product-id type)
-    (map-insert destinations 
-      {
-        product-id: product-id,
-        producer: owner
-      }
-      destination
-    )
+    (map-insert destinations product-id destination)
     (map-insert issuers product-id issuer)
     (map-insert managers product-id manager)
     (if (>= (len beneficiaries) u1)
@@ -267,12 +258,7 @@
     (product-id uint)
     (producer principal)
   )
-  (map-get? destinations 
-    {
-      product-id: product-id,
-      producer: producer
-    }
-  )
+  (map-get? destinations product-id)
 )
 
 (define-read-only 
