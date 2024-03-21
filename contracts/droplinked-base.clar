@@ -1,5 +1,12 @@
 (define-constant err-droplinked-operator-only (err u100))
 
+;; (request-id) => (product-id, producer, publisher, status)
+;;
+;; when a publisher requests a product, a unique request-id is generated and used to store details about that request.
+;; request status is represented by a single byte:
+;;   - 0x00: The request is pending, awaiting the producer's approval.
+;;   - 0x01: The producer has greenlit the request, indicating acceptance.
+;; rejected requests are purged from the map, meaning a request-id might not have a corresponding entry if the request was denied.
 (define-map requests uint 
   {
     product-id: uint,
