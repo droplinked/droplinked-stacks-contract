@@ -34,22 +34,6 @@
   bool
 )
 
-(define-map producers-requests 
-  {
-    request-id: uint,
-    producer: principal
-  }
-  bool
-)
-
-(define-map publishers-requests 
-  {
-    request-id: uint,
-    publisher: principal
-  }
-  bool
-)
-
 (define-map prices
   {
     product-id: uint,
