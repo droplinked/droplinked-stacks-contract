@@ -9,8 +9,8 @@
 ;;
 ;; when a publisher requests a product, a unique request-id is generated and used to store details about that request.
 ;; request status is represented by a single byte:
-;;   - 0x00: The request is pending, awaiting the producer's approval.
-;;   - 0x01: The producer has greenlit the request, indicating acceptance.
+;;   - 0x00: request is pending, awaiting the producer's approval.
+;;   - 0x01: producer has greenlit the request, indicating acceptance.
 ;; rejected requests are purged, meaning a request-id request was denied.
 (define-map requests uint 
   {
@@ -20,7 +20,7 @@
   }
 )
 
-;; (product-id, producer, publisher) => bool
+;; (product-id, producer, publisher) => (is-requested)
 ;;
 ;; is-requested map serves as a fast-lookup mechanism to prevent duplicate requests and ensure a streamlined workflow.
 ;; is-requested map is used to efficiently check if a specific publisher has ever requested a particular product from a particular producer.
@@ -35,7 +35,7 @@
 )
 
 
-;; (product-id) => uint
+;; (product-id) => (price)
 ;;
 ;; stores product price.
 (define-map prices uint uint)
@@ -45,6 +45,13 @@
 ;; stores producer commissions per product.
 (define-map commissions uint uint)
 
+;; (product-id) => (product-type)
+;;
+;; stores product type.
+;; product type is represented by a single byte:
+;;  - 0x00: indicates digital product
+;;  - 0x01: indicates print-on-demand product
+;;  - 0x02: indicates physical product
 (define-map types uint (buff 1))
 
 (define-map beneficiaries-links uint uint)
