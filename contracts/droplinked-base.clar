@@ -83,8 +83,10 @@
 
 (define-map managers uint principal)
 
+;; stores identifier of the most recent request.
 (define-data-var last-request-id uint u0)
 
+;; stores identifier of the most beneficiary.
 (define-data-var last-beneficiary-id uint u0)
 
 (define-public
