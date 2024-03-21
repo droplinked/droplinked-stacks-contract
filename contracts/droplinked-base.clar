@@ -193,42 +193,6 @@
   )
 )
 
-(define-public 
-  (insert-publisher-request
-    (request-id uint)
-    (publisher principal)
-  )
-  (begin 
-    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
-    (map-insert publishers-requests 
-      {
-        request-id: request-id,
-        publisher: publisher
-      }
-     true
-    )
-    (ok true)
-  )
-)
-
-(define-public 
-  (insert-producer-request
-    (request-id uint)
-    (producer principal)
-  )
-  (begin 
-    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
-    (map-insert producers-requests 
-      {
-        request-id: request-id,
-        producer: producer
-      }
-     true
-    )
-    (ok true)
-  )
-)
-
 (define-public
   (update-request-status
     (request-id uint)
@@ -250,42 +214,6 @@
             status: status
           }
         )
-      )
-    )
-  )
-)
-
-(define-public 
-  (remove-publisher-request
-    (request-id uint)
-    (publisher principal)
-  )
-  (begin 
-    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
-    (ok 
-      (map-delete publishers-requests 
-        {
-          request-id: request-id,
-          publisher: publisher
-        }
-      )
-    )
-  )
-)
-
-(define-public 
-  (remove-producer-request
-    (request-id uint)
-    (producer principal)
-  )
-  (begin 
-    (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
-    (ok 
-      (map-delete producers-requests 
-        {
-          request-id: request-id,
-          producer: producer
-        }
       )
     )
   )
