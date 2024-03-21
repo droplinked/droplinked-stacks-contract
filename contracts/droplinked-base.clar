@@ -16,6 +16,12 @@
   }
 )
 
+;; (product-id, producer, publisher) => bool
+;;
+;; `is-requested` map serves as a fast-lookup mechanism to prevent duplicate requests and ensure a streamlined workflow.
+;; `is-requested` map is used to efficiently check if a specific publisher has ever requested a particular product from a particular producer.
+;;    - `true` value for a key indicates that a request for this combination (product-id, producer, publisher) was created (whether rejected or accepted).
+;; - prevents duplicate requests and avoid creating a new request if a previous one for the same combination was denied.
 (define-map is-requested 
   { 
     product-id: uint,
