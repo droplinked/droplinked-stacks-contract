@@ -54,8 +54,12 @@
 ;;  - 0x02: indicates physical product
 (define-map types uint (buff 1))
 
+;; beneficiaries-links acts as an index for linked-lists containing beneficiary information for each product.
+;; beneficiaries-lists defines the structure of nodes within the linked-lists used to store beneficiary information for each product.
+;;
+;; these two maps together create a dynamic linked-list structure to manage beneficiaries for each product.
+;; beneficiaries-links map acts as an index, providing quick access to the head node of each product's linked-list in the beneficiaries-lists map.
 (define-map beneficiaries-links uint uint)
-
 (define-map beneficiaries-lists uint
   {
     is-percentage: bool,
