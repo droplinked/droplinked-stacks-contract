@@ -37,16 +37,13 @@
 
 ;; (product-id) => uint
 ;;
-;; maps each product-id to its price
+;; stores product price.
 (define-map prices uint uint)
 
-(define-map commissions
-  {
-    product-id: uint,
-    owner: principal
-  }
-  uint
-)
+;; (product-id) => (commission)
+;;
+;; stores producer commissions per product.
+(define-map commissions uint uint)
 
 (define-map types uint (buff 1))
 
@@ -108,7 +105,7 @@
   (begin
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
     (map-insert prices product-id price)
-    (map-insert commissions { product-id: product-id, owner: owner } commission)
+    (map-insert commissions product-id commission)
     (map-insert types product-id type)
     (map-insert destinations 
       {
@@ -251,12 +248,7 @@
     (product-id uint)
     (owner principal)
   )
-  (map-get? commissions 
-    {
-      product-id: product-id,
-      owner: owner
-    }
-  )
+  (map-get? commissions product-id)
 )
 
 (define-read-only 
