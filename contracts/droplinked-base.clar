@@ -78,6 +78,8 @@
   }
 )
 
+(define-map managers uint principal)
+
 (define-data-var last-request-id uint u0)
 
 (define-data-var last-beneficiary-id uint u0)
@@ -103,6 +105,7 @@
         value: uint
       }
     )
+    (manager principal)
   )
   (begin
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
@@ -117,6 +120,7 @@
       destination
     )
     (map-insert issuers product-id issuer)
+    (map-insert managers product-id manager)
     (if (>= (len beneficiaries) u1)
       (let 
         (
