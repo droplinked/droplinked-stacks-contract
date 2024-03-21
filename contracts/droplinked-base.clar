@@ -1,3 +1,5 @@
+;; droplinked-base contract serves as a data storage layer for the droplinked-operator-contract.
+;; in order maintain data integrity and security, only the droplinked-operator contract is authorized to modify the state of the droplinked-base-contract through public functions.
 (define-constant err-droplinked-operator-only (err u100))
 
 ;; (product-id) => producer
