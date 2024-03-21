@@ -2,16 +2,16 @@
 
 ;; (product-id) => producer
 ;;
-;; maps each `product-id` to its `producer`
+;; maps each product-id to its producer
 (define-map producers uint principal)
 
 ;; (request-id) => (product-id, producer, publisher, status)
 ;;
-;; when a `publisher` requests a product, a unique `request-id` is generated and used to store details about that request.
-;; request `status` is represented by a single byte:
+;; when a publisher requests a product, a unique request-id is generated and used to store details about that request.
+;; request status is represented by a single byte:
 ;;   - 0x00: The request is pending, awaiting the producer's approval.
-;;   - 0x01: The `producer` has greenlit the request, indicating acceptance.
-;; rejected requests are purged, meaning a `request-id`  request was denied.
+;;   - 0x01: The producer has greenlit the request, indicating acceptance.
+;; rejected requests are purged, meaning a request-id request was denied.
 (define-map requests uint 
   {
     product-id: uint,
@@ -22,9 +22,9 @@
 
 ;; (product-id, producer, publisher) => bool
 ;;
-;; `is-requested` map serves as a fast-lookup mechanism to prevent duplicate requests and ensure a streamlined workflow.
-;; `is-requested` map is used to efficiently check if a specific publisher has ever requested a particular product from a particular producer.
-;;    - `true` value for a key indicates that a request for this combination (product-id, producer, publisher) was created (whether rejected or accepted).
+;; is-requested map serves as a fast-lookup mechanism to prevent duplicate requests and ensure a streamlined workflow.
+;; is-requested map is used to efficiently check if a specific publisher has ever requested a particular product from a particular producer.
+;;    - a "true" value for a key indicates that a request for this combination (product-id, producer, publisher) was created (whether rejected or accepted).
 ;; - prevents duplicate requests and avoid creating a new request if a previous one for the same combination was denied.
 (define-map is-requested 
   { 
@@ -34,13 +34,11 @@
   bool
 )
 
-(define-map prices
-  {
-    product-id: uint,
-    owner: principal
-  }
-  uint
-)
+
+;; (product-id) => uint
+;;
+;; maps each product-id to its price
+(define-map prices uint uint)
 
 (define-map commissions
   {
@@ -109,7 +107,7 @@
   )
   (begin
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
-    (map-insert prices { product-id: product-id, owner: owner } price)
+    (map-insert prices product-id price)
     (map-insert commissions { product-id: product-id, owner: owner } commission)
     (map-insert types product-id type)
     (map-insert destinations 
@@ -245,12 +243,7 @@
     (product-id uint)
     (owner principal)
   )
-  (map-get? prices 
-    {
-      product-id: product-id,
-      owner: owner
-    }
-  )
+  (map-get? prices product-id)
 )
 
 (define-read-only 
