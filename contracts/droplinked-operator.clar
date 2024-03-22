@@ -52,7 +52,6 @@
         value: uint
       }
     )
-    (manager principal)
   )
   (let 
     (
@@ -67,7 +66,7 @@
       )
       err-invalid-type
     )
-    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission beneficiaries type destination issuer manager))
+    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission beneficiaries type destination issuer))
     (ok product-id)
   )
 )

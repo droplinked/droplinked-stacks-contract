@@ -76,14 +76,15 @@
 ;; stores payment destination addresses for each product.
 (define-map destinations uint principal)
 
+;; (product-id) => (address, value)
+;;
+;; stores issuers information.
 (define-map issuers uint 
   {
     address: principal,
     value: uint
   }
 )
-
-(define-map managers uint principal)
 
 ;; stores identifier of the most recent request.
 (define-data-var last-request-id uint u0)
@@ -112,7 +113,6 @@
         value: uint
       }
     )
-    (manager principal)
   )
   (begin
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
@@ -121,7 +121,6 @@
     (map-insert types product-id type)
     (map-insert destinations product-id destination)
     (map-insert issuers product-id issuer)
-    (map-insert managers product-id manager)
     (if (>= (len beneficiaries) u1)
       (let 
         (
