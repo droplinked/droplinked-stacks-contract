@@ -1,4 +1,5 @@
 (define-constant err-droplinked-admin-only (err u100))
+
 (define-constant err-publisher-only (err u101))
 (define-constant err-producer-only (err u102))
 
@@ -30,6 +31,12 @@
     (asserts! (is-eq (var-get droplinked-admin) tx-sender) err-droplinked-admin-only)
     (ok (var-set droplinked-admin admin))
   )
+)
+
+;; retrieves current-droplinked admin
+(define-read-only 
+  (get-droplinked-admin)
+  (var-get droplinked-admin)
 )
 
 (define-public 
