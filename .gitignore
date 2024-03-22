@@ -12,3 +12,4 @@ coverage
 costs-reports.json
 node_modules
 deployments/default.devnet-plan.yaml
+deployments/default.simnet-plan.yaml

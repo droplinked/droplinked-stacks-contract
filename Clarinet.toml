@@ -37,4 +37,4 @@ passes = ['check_checker']
 strict = false
 trusted_sender = true
 trusted_caller = true
-callee_filter = true
+callee_filter = false
