@@ -33,10 +33,27 @@
   )
 )
 
-;; retrieves current-droplinked admin
+;; allows currently droplinked-admin to set new droplinked destination address
+(define-public 
+  (set-droplinked-destination
+    (destination principal)
+  )
+  (begin
+    (asserts! (is-eq (var-get droplinked-admin) tx-sender) err-droplinked-admin-only)
+    (ok (var-set droplinked-destination destination))
+  )
+)
+
+;; retrieves current droplinked-admin
 (define-read-only 
   (get-droplinked-admin)
   (var-get droplinked-admin)
+)
+
+;; retrieves current droplinked-destination
+(define-read-only 
+  (get-droplinked-destination)
+  (var-get droplinked-destination)
 )
 
 (define-public 
