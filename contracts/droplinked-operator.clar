@@ -1,4 +1,4 @@
-(define-constant err-droplinked-only (err u100))
+(define-constant err-droplinked-admin-only (err u100))
 (define-constant err-publisher-only (err u101))
 (define-constant err-producer-only (err u102))
 
@@ -9,7 +9,8 @@
 (define-constant err-request-duplicate (err u300))
 (define-constant err-request-accepted (err u301))
 
-(define-data-var droplinked principal 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM)
+(define-data-var droplinked-admin principal 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM)
+(define-data-var droplinked-destination principal 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM)
 
 (define-constant TYPE_DIGITAL 0x00)
 (define-constant TYPE_POD 0x01)
@@ -20,13 +21,14 @@
 
 (define-constant DROPLINKED_FEE u100)
 
+;; allows currently droplinked-admin to set new address as admin
 (define-public 
-  (set-droplinked
-    (address principal)
+  (set-droplinked-admin
+    (admin principal)
   )
   (begin 
-    (asserts! (is-eq (var-get droplinked) tx-sender) err-droplinked-only)
-    (ok (var-set droplinked address))
+    (asserts! (is-eq (var-get droplinked-admin) tx-sender) err-droplinked-admin-only)
+    (ok (var-set droplinked-admin admin))
   )
 )
 
@@ -227,7 +229,7 @@
         (royalty-share (apply-percentage price (get value issuer)))
         (droplinked-share (apply-percentage price DROPLINKED_FEE))
       )
-      (try! (stx-transfer? droplinked-share purchaser (var-get droplinked)))
+      (try! (stx-transfer? droplinked-share purchaser (var-get droplinked-destination)))
       (try! (stx-transfer? royalty-share purchaser (get address issuer)))
       (try! (match optional-publisher publisher 
         (if (is-eq publisher-share u0) 
