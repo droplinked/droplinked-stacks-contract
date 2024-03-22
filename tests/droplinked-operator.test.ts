@@ -2,7 +2,7 @@ import { Cl } from '@stacks/transactions'
 import { describe, expect, it } from 'vitest'
 
 describe("'set-droplinked-admin' function", () => {
-	it('ensures only current admin can call function', () => {
+	it('must return (err u100) if sender is not admin', () => {
 		const response = simnet.callPublicFn(
 			'droplinked-operator',
 			'set-droplinked-admin',
@@ -37,7 +37,7 @@ describe("'set-droplinked-admin' function", () => {
 })
 
 describe("'set-droplinked-destination' function", () => {
-	it('ensures only current admin can call function', () => {
+	it('must return (err u100) if sender is not admin', () => {
 		const response = simnet.callPublicFn(
 			'droplinked-operator',
 			'set-droplinked-destination',
