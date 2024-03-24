@@ -44,20 +44,9 @@
   )
 )
 
-;; retrieves current droplinked-admin
-(define-read-only 
-  (get-droplinked-admin)
-  (var-get droplinked-admin)
-)
-
-;; retrieves current droplinked-destination
-(define-read-only 
-  (get-droplinked-destination)
-  (var-get droplinked-destination)
-)
-
 (define-public 
   (create-product
+    (producer principal)
     (uri (string-ascii 256))
     (price uint)
     (commission uint)
@@ -83,6 +72,7 @@
     (
       (product-id (try! (contract-call? .droplinked-token mint amount recipient uri)))
     )
+    (asserts! (is-eq producer tx-sender) err-producer-only)
     (asserts! (is-eq price u0) err-invalid-price)
     (asserts! 
       (or 
@@ -92,7 +82,7 @@
       )
       err-invalid-type
     )
-    (try! (contract-call? .droplinked-base insert-product product-id tx-sender price commission beneficiaries type destination issuer))
+    (try! (contract-call? .droplinked-base insert-product product-id producer price commission beneficiaries type destination issuer))
     (ok product-id)
   )
 )
@@ -363,4 +353,16 @@
     previous-err
     previous-response
   )
+)
+
+;; retrieves current droplinked-admin
+(define-read-only 
+  (get-droplinked-admin)
+  (var-get droplinked-admin)
+)
+
+;; retrieves current droplinked-destination
+(define-read-only 
+  (get-droplinked-destination)
+  (var-get droplinked-destination)
 )
