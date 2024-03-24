@@ -1,10 +1,11 @@
 (define-constant err-droplinked-admin-only (err u100))
 
-(define-constant err-publisher-only (err u101))
-(define-constant err-producer-only (err u102))
+(define-constant err-publisher-only (err u200))
+(define-constant err-producer-only (err u201))
 
-(define-constant err-invalid-price (err u200))
-(define-constant err-invalid-type (err u201))
+(define-constant err-invalid-price (err u300))
+(define-constant err-invalid-commission (err u301))
+(define-constant err-invalid-type (err u302))
 (define-constant err-invalid-request-id (err u202))
 
 (define-constant err-request-duplicate (err u300))
@@ -49,7 +50,11 @@
     (producer principal)
     (uri (string-ascii 256))
     (price uint)
+    (amount uint)
     (commission uint)
+    (type (buff 1))
+    (recipient principal)
+    (destination principal)
     (beneficiaries (list 16 
       {
         percentage: bool,
@@ -57,10 +62,6 @@
         value: uint,
       }
     ))
-    (amount uint)
-    (type (buff 1))
-    (recipient principal)
-    (destination principal)
     (issuer 
       {
         address: principal,
@@ -73,7 +74,8 @@
       (product-id (try! (contract-call? .droplinked-token mint amount recipient uri)))
     )
     (asserts! (is-eq producer tx-sender) err-producer-only)
-    (asserts! (is-eq price u0) err-invalid-price)
+    (asserts! (>= price u1) err-invalid-price)
+    (asserts! (and (>= commission u0) (<= commission u100)) err-invalid-commission)
     (asserts! 
       (or 
         (is-eq type TYPE_DIGITAL)
