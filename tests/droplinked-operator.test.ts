@@ -7,6 +7,8 @@ import { OperatorErrors } from './utils/errors'
 
 const deployer = simnet.deployer
 const droplinkedOperatorContract = deployer + '.droplinked-operator'
+const droplinkedBaseContract = deployer + '.droplinked-base'
+const droplinkedTokenContract = deployer + '.droplinked-token'
 
 describe("'set-droplinked-admin' function", () => {
 	it('should return (err u100) if sender is not admin', () => {
@@ -85,6 +87,7 @@ describe("'create-product' function", () => {
 	const amount = 20000
 	const commission = 20
 	const type = ProductType.DIGITAL
+	const recipient = 'ST3PF13W7Z0RRM42A8VZRVFQ75SV1K26RXEP8YGKJ'
 	const beneficiaries: Beneficiary[] = [
 		{
 			percentage: true,
@@ -106,7 +109,7 @@ describe("'create-product' function", () => {
 		amount,
 		commission,
 		type,
-		producer,
+		recipient,
 		producer,
 		beneficiaries,
 		issuer
@@ -180,15 +183,13 @@ describe("'create-product' function", () => {
 	})
 
 	it('should return ok response if product is print_on_demand', () => {
-		const digitalProduct_args = [...args]
-		digitalProduct_args[5] = Cl.buffer(
-			Buffer.from([ProductType.PRINT_ON_DEMAND])
-		)
+		const podProduct_args = [...args]
+		podProduct_args[5] = Cl.buffer(Buffer.from([ProductType.PRINT_ON_DEMAND]))
 
 		let response = simnet.callPublicFn(
 			droplinkedOperatorContract,
 			'create-product',
-			digitalProduct_args,
+			podProduct_args,
 			producer
 		)
 
@@ -196,16 +197,102 @@ describe("'create-product' function", () => {
 	})
 
 	it('should return ok response if product is physical', () => {
-		const digitalProduct_args = [...args]
-		digitalProduct_args[5] = Cl.buffer(Buffer.from([ProductType.PHYSICAL]))
+		const physicalProduct_args = [...args]
+		physicalProduct_args[5] = Cl.buffer(Buffer.from([ProductType.PHYSICAL]))
 
 		let response = simnet.callPublicFn(
 			droplinkedOperatorContract,
 			'create-product',
-			digitalProduct_args,
+			physicalProduct_args,
 			producer
 		)
 
 		expect(response.result).toBeOk(Cl.uint(1))
+	})
+
+	it('should store product information in droplinked-base, mint tokens properly and return ok response', () => {
+		let response = simnet.callPublicFn(
+			droplinkedOperatorContract,
+			'create-product',
+			args,
+			producer
+		)
+
+		/* ok response */
+		expect(response.result).toBeOk(Cl.uint(1))
+
+		/* mint product (fungible token) and sku (non-fungible token) */
+		const productInfo = simnet.getAssetsMap().get('.droplinked-token.product')
+		expect(productInfo?.get(recipient)).toBe(BigInt(amount))
+
+		const skuInfo = simnet.getAssetsMap().get('.droplinked-token.sku')
+		expect(skuInfo?.get(recipient)).toBe(BigInt(1))
+
+		// ensure contract updated balances
+		const balanceResponse = simnet.callReadOnlyFn(
+			droplinkedTokenContract,
+			'get-balance',
+			[Cl.uint(1), Cl.principal(recipient)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(balanceResponse.result).toBeOk(Cl.uint(amount))
+
+		// ensure contract updated supplies
+		const suppliesResponse = simnet.callReadOnlyFn(
+			droplinkedTokenContract,
+			'get-total-supply',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(suppliesResponse.result).toBeOk(Cl.uint(amount))
+		// ----------------------------------------------------
+
+		/* store product information */
+		// store uri
+		const uriResponse = simnet.callReadOnlyFn(
+			droplinkedTokenContract,
+			'get-token-uri',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(uriResponse.result).toBeOk(Cl.some(Cl.stringAscii(uri)))
+
+		// store producer
+		const producerResponse = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-producer?',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(producerResponse.result).toBeSome(Cl.principal(producer))
+
+		// store price
+		const priceResponse = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-price?',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(priceResponse.result).toBeSome(Cl.uint(price))
+
+		// store commission
+		const commissionResponse = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-commission?',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(commissionResponse.result).toBeSome(Cl.uint(commission))
+
+		// store type
+		const typeResponse = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-type?',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(typeResponse.result).toBeSome(Cl.buffer(Buffer.from([type])))
+
+		// TODO: check for beneficiaries and issuer
 	})
 })

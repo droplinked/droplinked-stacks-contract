@@ -244,7 +244,6 @@
 (define-read-only
   (get-price?
     (product-id uint)
-    (owner principal)
   )
   (map-get? prices product-id)
 )
@@ -252,7 +251,6 @@
 (define-read-only 
   (get-commission?
     (product-id uint)
-    (owner principal)
   )
   (map-get? commissions product-id)
 )
