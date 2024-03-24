@@ -64,9 +64,9 @@
 (define-map beneficiaries-links uint uint)
 (define-map beneficiaries-lists uint
   {
-    is-percentage: bool,
-    value: uint,
+    percentage: bool,
     address: principal,
+    value: uint,
     next: (optional uint)
   }
 )
@@ -95,18 +95,18 @@
 (define-public
   (insert-product
     (product-id uint)
-    (owner principal)
+    (producer principal)
     (price uint)
     (commission uint)
-    (beneficiaries (list 16 
-      {
-        is-percentage: bool,
-        value: uint,
-        address: principal,
-      }
-    ))
     (type (buff 1))
     (destination principal)
+    (beneficiaries (list 16 
+      {
+        percentage: bool,
+        address: principal,
+        value: uint,
+      }
+    ))
     (issuer 
       {
         address: principal,
@@ -116,6 +116,7 @@
   )
   (begin
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (map-insert producers product-id producer)
     (map-insert prices product-id price)
     (map-insert commissions product-id commission)
     (map-insert types product-id type)
@@ -325,9 +326,9 @@
   (insert-beneficiary-iter
     (beneficiary 
       {
-        is-percentage: bool,
-        value: uint,
+        percentage: bool,
         address: principal,
+        value: uint,
       }
     )
     (previous-result 

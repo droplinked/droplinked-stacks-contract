@@ -1,10 +1,11 @@
 (define-constant err-droplinked-admin-only (err u100))
 
-(define-constant err-publisher-only (err u101))
-(define-constant err-producer-only (err u102))
+(define-constant err-publisher-only (err u200))
+(define-constant err-producer-only (err u201))
 
-(define-constant err-invalid-price (err u200))
-(define-constant err-invalid-type (err u201))
+(define-constant err-invalid-price (err u300))
+(define-constant err-invalid-commission (err u301))
+(define-constant err-invalid-type (err u302))
 (define-constant err-invalid-request-id (err u202))
 
 (define-constant err-request-duplicate (err u300))
@@ -49,18 +50,18 @@
     (producer principal)
     (uri (string-ascii 256))
     (price uint)
-    (commission uint)
-    (beneficiaries (list 16 
-      {
-        is-percentage: bool,
-        value: uint,
-        address: principal,
-      }
-    ))
     (amount uint)
+    (commission uint)
     (type (buff 1))
     (recipient principal)
     (destination principal)
+    (beneficiaries (list 16 
+      {
+        percentage: bool,
+        address: principal,
+        value: uint,
+      }
+    ))
     (issuer 
       {
         address: principal,
@@ -73,7 +74,8 @@
       (product-id (try! (contract-call? .droplinked-token mint amount recipient uri)))
     )
     (asserts! (is-eq producer tx-sender) err-producer-only)
-    (asserts! (is-eq price u0) err-invalid-price)
+    (asserts! (>= price u1) err-invalid-price)
+    (asserts! (and (>= commission u0) (<= commission u100)) err-invalid-commission)
     (asserts! 
       (or 
         (is-eq type TYPE_DIGITAL)
@@ -82,7 +84,7 @@
       )
       err-invalid-type
     )
-    (try! (contract-call? .droplinked-base insert-product product-id producer price commission beneficiaries type destination issuer))
+    (try! (contract-call? .droplinked-base insert-product product-id producer price commission type destination beneficiaries issuer))
     (ok product-id)
   )
 )
@@ -330,7 +332,7 @@
           (
             (beneficiary (unwrap-panic (contract-call? .droplinked-base get-benificiary? benificiary-id)))
             (beneficiary-share 
-              (if (get is-percentage beneficiary)
+              (if (get percentage beneficiary)
                 (apply-percentage price (get value beneficiary))
                 (get value beneficiary)
               )
