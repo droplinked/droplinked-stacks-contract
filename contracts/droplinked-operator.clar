@@ -52,9 +52,9 @@
     (commission uint)
     (beneficiaries (list 16 
       {
-        is-percentage: bool,
-        value: uint,
+        percentage: bool,
         address: principal,
+        value: uint,
       }
     ))
     (amount uint)
@@ -82,7 +82,7 @@
       )
       err-invalid-type
     )
-    (try! (contract-call? .droplinked-base insert-product product-id producer price commission beneficiaries type destination issuer))
+    (try! (contract-call? .droplinked-base insert-product product-id producer price commission type destination beneficiaries issuer))
     (ok product-id)
   )
 )
@@ -330,7 +330,7 @@
           (
             (beneficiary (unwrap-panic (contract-call? .droplinked-base get-benificiary? benificiary-id)))
             (beneficiary-share 
-              (if (get is-percentage beneficiary)
+              (if (get percentage beneficiary)
                 (apply-percentage price (get value beneficiary))
                 (get value beneficiary)
               )

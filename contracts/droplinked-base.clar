@@ -116,12 +116,12 @@
   )
   (begin
     (asserts! (is-eq contract-caller .droplinked-operator) err-droplinked-operator-only)
+    (map-insert producers product-id producer)
     (map-insert prices product-id price)
     (map-insert commissions product-id commission)
     (map-insert types product-id type)
     (map-insert destinations product-id destination)
     (map-insert issuers product-id issuer)
-    (map-insert producers product-id producer)
     (if (>= (len beneficiaries) u1)
       (let 
         (
