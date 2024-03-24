@@ -3,7 +3,7 @@ import { Cl } from '@stacks/transactions'
 export enum ProductType {
 	DIGITAL = 0x00,
 	PRINT_ON_DEMAND = 0x01,
-	TYPE_PHYSICAL = 0x02,
+	PHYSICAL = 0x02,
 }
 
 export type Beneficiary = {
