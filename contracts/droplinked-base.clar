@@ -64,9 +64,9 @@
 (define-map beneficiaries-links uint uint)
 (define-map beneficiaries-lists uint
   {
-    is-percentage: bool,
-    value: uint,
+    percentage: bool,
     address: principal,
+    value: uint,
     next: (optional uint)
   }
 )
@@ -95,18 +95,18 @@
 (define-public
   (insert-product
     (product-id uint)
-    (owner principal)
+    (producer principal)
     (price uint)
     (commission uint)
-    (beneficiaries (list 16 
-      {
-        is-percentage: bool,
-        value: uint,
-        address: principal,
-      }
-    ))
     (type (buff 1))
     (destination principal)
+    (beneficiaries (list 16 
+      {
+        percentage: bool,
+        address: principal,
+        value: uint,
+      }
+    ))
     (issuer 
       {
         address: principal,
@@ -121,6 +121,7 @@
     (map-insert types product-id type)
     (map-insert destinations product-id destination)
     (map-insert issuers product-id issuer)
+    (map-insert producers product-id producer)
     (if (>= (len beneficiaries) u1)
       (let 
         (
@@ -325,9 +326,9 @@
   (insert-beneficiary-iter
     (beneficiary 
       {
-        is-percentage: bool,
-        value: uint,
+        percentage: bool,
         address: principal,
+        value: uint,
       }
     )
     (previous-result 
