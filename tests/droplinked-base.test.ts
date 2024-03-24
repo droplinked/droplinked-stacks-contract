@@ -1,4 +1,3 @@
-import { Cl } from '@stacks/transactions'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -7,10 +6,10 @@ import {
 	ProductType,
 	insertProduct_args,
 } from './utils/base.droplinked'
-import { DroplinkedOperatorOnly } from './utils/errors'
+import { BaseErrors } from './utils/errors'
 
 const deployer = simnet.deployer
-const droplinkedBase = deployer + '.droplinked-base'
+const droplinkedBaseContract = deployer + '.droplinked-base'
 
 describe("'insert-product' function", () => {
 	const id = 1
@@ -45,12 +44,12 @@ describe("'insert-product' function", () => {
 
 	it('must return (err u100) if sender is not droplinked-operator', () => {
 		const response = simnet.callPublicFn(
-			droplinkedBase,
+			droplinkedBaseContract,
 			'insert-product',
 			args,
 			producer
 		)
 
-		expect(response.result).toBeErr(DroplinkedOperatorOnly)
+		expect(response.result).toBeErr(BaseErrors.DROPLINKED_OPERATOR_ONLY)
 	})
 })
