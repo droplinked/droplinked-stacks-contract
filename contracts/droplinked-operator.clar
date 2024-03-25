@@ -236,7 +236,7 @@
       (price (unwrap! (contract-call? .droplinked-base get-price? product-id) (err u200)))
       (commission (unwrap! (contract-call? .droplinked-base get-commission? product-id) (err u200)))
       (type (unwrap! (contract-call? .droplinked-base get-type? product-id) (err u200)))
-      (destination (unwrap! (contract-call? .droplinked-base get-destination? product-id producer) (err u200)))
+      (destination (unwrap! (contract-call? .droplinked-base get-destination? product-id) (err u200)))
       (issuer (unwrap! (contract-call? .droplinked-base get-royalty? product-id) (err u200)))
     )
     (let 

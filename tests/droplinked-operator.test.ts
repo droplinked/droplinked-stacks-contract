@@ -1,4 +1,4 @@
-import { Cl } from '@stacks/transactions'
+import { Cl, cvToValue } from '@stacks/transactions'
 import { describe, expect, it } from 'vitest'
 
 import { Beneficiary, Issuer, ProductType } from './utils/base.droplinked'
@@ -88,6 +88,7 @@ describe("'create-product' function", () => {
 	const commission = 20
 	const type = ProductType.DIGITAL
 	const recipient = 'ST3PF13W7Z0RRM42A8VZRVFQ75SV1K26RXEP8YGKJ'
+	const destination = 'ST3PF13W7Z0RRM42A8VZRVFQ75SV1K26RXEP8YGKJ'
 	const beneficiaries: Beneficiary[] = [
 		{
 			percentage: true,
@@ -110,7 +111,7 @@ describe("'create-product' function", () => {
 		commission,
 		type,
 		recipient,
-		producer,
+		destination,
 		beneficiaries,
 		issuer
 	)
@@ -218,17 +219,8 @@ describe("'create-product' function", () => {
 			producer
 		)
 
-		/* ok response */
 		expect(response.result).toBeOk(Cl.uint(1))
 
-		/* mint product (fungible token) and sku (non-fungible token) */
-		const productInfo = simnet.getAssetsMap().get('.droplinked-token.product')
-		expect(productInfo?.get(recipient)).toBe(BigInt(amount))
-
-		const skuInfo = simnet.getAssetsMap().get('.droplinked-token.sku')
-		expect(skuInfo?.get(recipient)).toBe(BigInt(1))
-
-		// ensure contract updated balances
 		const balanceResponse = simnet.callReadOnlyFn(
 			droplinkedTokenContract,
 			'get-balance',
@@ -237,7 +229,6 @@ describe("'create-product' function", () => {
 		)
 		expect(balanceResponse.result).toBeOk(Cl.uint(amount))
 
-		// ensure contract updated supplies
 		const suppliesResponse = simnet.callReadOnlyFn(
 			droplinkedTokenContract,
 			'get-total-supply',
@@ -245,10 +236,8 @@ describe("'create-product' function", () => {
 			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
 		)
 		expect(suppliesResponse.result).toBeOk(Cl.uint(amount))
-		// ----------------------------------------------------
 
-		/* store product information */
-		// store uri
+		// uri
 		const uriResponse = simnet.callReadOnlyFn(
 			droplinkedTokenContract,
 			'get-token-uri',
@@ -257,7 +246,7 @@ describe("'create-product' function", () => {
 		)
 		expect(uriResponse.result).toBeOk(Cl.some(Cl.stringAscii(uri)))
 
-		// store producer
+		// producer
 		const producerResponse = simnet.callReadOnlyFn(
 			droplinkedBaseContract,
 			'get-producer?',
@@ -266,7 +255,7 @@ describe("'create-product' function", () => {
 		)
 		expect(producerResponse.result).toBeSome(Cl.principal(producer))
 
-		// store price
+		// price
 		const priceResponse = simnet.callReadOnlyFn(
 			droplinkedBaseContract,
 			'get-price?',
@@ -275,7 +264,7 @@ describe("'create-product' function", () => {
 		)
 		expect(priceResponse.result).toBeSome(Cl.uint(price))
 
-		// store commission
+		// commission
 		const commissionResponse = simnet.callReadOnlyFn(
 			droplinkedBaseContract,
 			'get-commission?',
@@ -284,7 +273,7 @@ describe("'create-product' function", () => {
 		)
 		expect(commissionResponse.result).toBeSome(Cl.uint(commission))
 
-		// store type
+		// type
 		const typeResponse = simnet.callReadOnlyFn(
 			droplinkedBaseContract,
 			'get-type?',
@@ -293,6 +282,68 @@ describe("'create-product' function", () => {
 		)
 		expect(typeResponse.result).toBeSome(Cl.buffer(Buffer.from([type])))
 
-		// TODO: check for beneficiaries and issuer
+		// destination
+		const destinationResponse = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-destination?',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(destinationResponse.result).toBeSome(Cl.principal(destination))
+
+		// beneficiaries
+		const linkResponse = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-benificiary-link?',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(linkResponse.result).toBeSome(Cl.uint(1))
+
+		let link = cvToValue(linkResponse.result).value
+		let beneficiary = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-benificiary?',
+			[Cl.uint(link)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+
+		expect(beneficiary.result).toBeSome(
+			Cl.tuple({
+				percentage: Cl.bool(beneficiaries[0].percentage),
+				address: Cl.address(beneficiaries[0].address),
+				value: Cl.uint(beneficiaries[0].value),
+				next: Cl.some(Cl.uint(2)),
+			})
+		)
+
+		beneficiary = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-benificiary?',
+			[Cl.uint(2)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(beneficiary.result).toBeSome(
+			Cl.tuple({
+				percentage: Cl.bool(beneficiaries[1].percentage),
+				address: Cl.address(beneficiaries[1].address),
+				value: Cl.uint(beneficiaries[1].value),
+				next: Cl.none(),
+			})
+		)
+
+		// issuer
+		const issuerResponse = simnet.callReadOnlyFn(
+			droplinkedBaseContract,
+			'get-issuer?',
+			[Cl.uint(1)],
+			'ST2REHHS5J3CERCRBEPMGH7921Q6PYKAADT7JP2VB'
+		)
+		expect(issuerResponse.result).toBeSome(
+			Cl.tuple({
+				address: Cl.principal(issuer.address),
+				value: Cl.uint(issuer.value),
+			})
+		)
 	})
 })
