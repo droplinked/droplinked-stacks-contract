@@ -256,9 +256,15 @@
 )
 
 (define-read-only 
+  (get-issuer?
+    (product-id uint)
+  )
+  (map-get? issuers product-id)
+)
+
+(define-read-only 
   (get-destination?
     (product-id uint)
-    (producer principal)
   )
   (map-get? destinations product-id)
 )
